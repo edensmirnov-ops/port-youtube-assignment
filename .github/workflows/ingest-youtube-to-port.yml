@@ -1,0 +1,25 @@
+name: Ingest YouTube playlist into Port
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run ingest script
+        env:
+          PLAYLIST_ID: ${{ secrets.PLAYLIST_ID }}
+          PORT_CLIENT_ID: ${{ secrets.PORT_CLIENT_ID }}
+          PORT_CLIENT_SECRET: ${{ secrets.PORT_CLIENT_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: node scripts/ingest_youtube_to_port.js
