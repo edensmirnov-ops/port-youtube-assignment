@@ -161,12 +161,13 @@ async function main() {
   const accessToken = await getPortAccessToken();
   console.log('Got Port access token (length):', accessToken.length);
 
-  // The rest will be implemented in next steps:
-  // 1) fetch YouTube data
-  // 2) build Port entities
-  // 3) upsert entities into Port
+  // שלב חדש: להביא נתונים מיוטיוב
+  console.log('Fetching YouTube playlist and videos...');
+  const youtubeData = await fetchYoutubePlaylistAndVideos(playlistId);
+  console.log('YouTube playlist title:', youtubeData.playlist.title);
+  console.log('YouTube videos count:', youtubeData.videos.length);
 
-  console.log('Ingest script finished (skeleton).');
+  console.log('Ingest script finished (YouTube fetch only).');
 }
 
 main().catch((err) => {
