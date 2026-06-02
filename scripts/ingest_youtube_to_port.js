@@ -139,15 +139,69 @@ async function fetchYoutubePlaylistAndVideos(playlistId) {
 }
 
 function buildPortEntities(youtubeData) {
-  // TODO: implement later
+  const { playlist, videos } = youtubeData;
+
+  // בניית ישות Playlist
+  const playlistEntity = {
+    identifier: playlist.id,
+    title: playlist.title,
+    properties: {
+      id: playlist.id,
+      title: playlist.title,
+      description: playlist.description || '',
+      publishedAt: playlist.publishedAt,
+      thumbnail: playlist.thumbnail || '',
+      totalVideos: videos.length,
+    },
+  };
+
+  // בניית ישויות Video
+  const videoEntities = videos.map((video) => ({
+    identifier: video.id,
+    title: video.title,
+    properties: {
+      id: video.id,
+      title: video.title,
+      description: video.description || '',
+      publishedAt: video.publishedAt,
+      duration: video.duration,
+      views: video.views,
+      likes: video.likes,
+      commentsCount: video.commentsCount,
+      thumbnail: video.thumbnail || '',
+      url: `https://youtu.be/${video.id}`,
+    },
+    relations: {
+      playlist: [playlist.id],
+    },
+  }));
+
   return {
-    playlistEntity: null,
-    videoEntities: [],
+    playlistEntity,
+    videoEntities,
   };
 }
 
+
 async function upsertEntityToPort(accessToken, blueprintId, entity) {
-  // TODO: implement later
+  const url = `https://api.port.io/v1/blueprints/${blueprintId}/entities?upsert=true`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(entity),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Port upsert failed for ${blueprintId}/${entity.identifier}: ${response.status} ${response.statusText} - ${text}`);
+  }
+
+  const data = await response.json();
+  return data;
 }
 
 async function main() {
@@ -161,13 +215,29 @@ async function main() {
   const accessToken = await getPortAccessToken();
   console.log('Got Port access token (length):', accessToken.length);
 
-  // שלב חדש: להביא נתונים מיוטיוב
   console.log('Fetching YouTube playlist and videos...');
   const youtubeData = await fetchYoutubePlaylistAndVideos(playlistId);
   console.log('YouTube playlist title:', youtubeData.playlist.title);
   console.log('YouTube videos count:', youtubeData.videos.length);
 
-  console.log('Ingest script finished (YouTube fetch only).');
+  console.log('Building Port entities...');
+  const { playlistEntity, videoEntities } = buildPortEntities(youtubeData);
+
+  console.log('Upserting playlist to Port...');
+  await upsertEntityToPort(accessToken, 'playlist', playlistEntity);
+  console.log('Playlist upserted successfully.');
+
+  console.log(`Upserting ${videoEntities.length} videos to Port...`);
+  for (let i = 0; i < videoEntities.length; i++) {
+    const video = videoEntities[i];
+    await upsertEntityToPort(accessToken, 'video', video);
+    if ((i + 1) % 10 === 0) {
+      console.log(`Upserted ${i + 1}/${videoEntities.length} videos...`);
+    }
+  }
+  console.log('All videos upserted successfully.');
+
+  console.log('Ingest script finished successfully!');
 }
 
 main().catch((err) => {
