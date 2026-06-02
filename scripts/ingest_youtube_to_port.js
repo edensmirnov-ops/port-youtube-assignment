@@ -21,7 +21,7 @@ async function getPortAccessToken() {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(Port auth failed: ${response.status} ${response.statusText} - ${text});
+    throw new Error('Port auth failed: ' + response.status + ' ' + response.statusText + ' - ' + text);
   }
 
   const data = await response.json();
