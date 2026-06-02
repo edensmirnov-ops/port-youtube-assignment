@@ -56,8 +56,7 @@ async function fetchYoutubePlaylistAndVideos(playlistId) {
     thumbnail:
       (playlistItem.snippet.thumbnails && (playlistItem.snippet.thumbnails.high?.url || playlistItem.snippet.thumbnails.default?.url)) || null,
   };
-
-  // Get all playlistItems -> videoIds, paginated
+// Get all playlistItems -> videoIds, paginated
   let videos = [];
   let nextPageToken = undefined;
 
@@ -112,7 +111,6 @@ nextPageToken = itemsData.nextPageToken;
 
   return { playlist, videos };
 }
-
 // buildPortEntities
 function buildPortEntities(youtubeData) {
   const playlist = youtubeData.playlist;
@@ -175,7 +173,6 @@ async function upsertEntityToPort(accessToken, blueprintId, entity) {
   }
   return await res.json();
 }
-
 async function main() {
   console.log('Starting ingest script...');
 
